@@ -5,6 +5,7 @@ import { CourierSchema } from "../schemas/courier";
 import type { Courier } from "../schemas/courier";
 import { env } from "../config/env";
 import { OrdersClient, CouriersClient, DispatchClient } from "../api/clients";
+import { PRAGUE_CENTER } from "../utils/test-locations";
 
 type ApiFixtures = {
   authToken: string;
@@ -16,6 +17,11 @@ type ApiFixtures = {
   couriers: CouriersClient;
   dispatch: DispatchClient;
   adminOrders: OrdersClient;
+  // Team fixture — 3 available couriers s různými tag sadami (graduation bonus B2)
+  couriersTeam: Courier[];
+  // Composition fixture — named tuple 2 available kurýrů s bike tagy.
+  // Určeno pro testy typu "přiřadím první, druhý chci paralelně pro další pokus".
+  pairOfAvailableCouriers: [Courier, Courier];
 };
 
 function makeFakeCourierData() {
@@ -114,8 +120,8 @@ export const test = base.extend<ApiFixtures>({
 
     const locationResponse = await request.patch(`/api/v1/couriers/${courierId}/location`, {
       data: {
-        lat: 50.08,
-        lng: 14.42,
+        lat: PRAGUE_CENTER.lat,
+        lng: PRAGUE_CENTER.lng,
       },
       failOnStatusCode: false,
     });
@@ -167,6 +173,62 @@ export const test = base.extend<ApiFixtures>({
   adminOrders: async ({ adminRequest }, use) => {
     // admin-scope OrdersClient — používej pro DELETE/admin operace
     await use(new OrdersClient(adminRequest));
+  },
+
+  couriersTeam: async ({ request }, use) => {
+    // 3 kurýři s různými tag sadami — pokrývá běžné dispatch scénáře.
+    // Všichni už mají GPS i status=available, takže test může rovnou dispatchovat.
+    const client = new CouriersClient(request);
+    const tagSets: string[][] = [["bike"], ["fragile_ok", "car"], ["vip", "bike"]];
+    const created: Courier[] = [];
+
+    for (const tags of tagSets) {
+      const base = makeFakeCourierData();
+      const courier = await client.create({ ...base, tags });
+      await client.setLocation(courier.id, PRAGUE_CENTER.lat, PRAGUE_CENTER.lng);
+      const ready = await client.setStatus(courier.id, "available");
+      created.push(ready);
+    }
+
+    await use(created);
+
+    // Cleanup: offline → delete pro každého (tolerujeme partial fail přes failOnStatusCode)
+    for (const c of created) {
+      await request.patch(`/api/v1/couriers/${c.id}/status`, {
+        data: { status: "offline" },
+        failOnStatusCode: false,
+      });
+      await request.delete(`/api/v1/couriers/${c.id}`, {
+        failOnStatusCode: false,
+      });
+    }
+  },
+
+  pairOfAvailableCouriers: async ({ request }, use) => {
+    // Composition nad CouriersClient — každý kurýr prochází: create → GPS → available.
+    // Oba dostávají stejný tag set ["bike"]; pokud test potřebuje asymetrické tagy,
+    // použij raději inline `prepareAvailableCourier` nebo `couriersTeam`.
+    const client = new CouriersClient(request);
+    const mkReady = async (): Promise<Courier> => {
+      const courier = await client.create({ ...makeFakeCourierData(), tags: ["bike"] });
+      await client.setLocation(courier.id, PRAGUE_CENTER.lat, PRAGUE_CENTER.lng);
+      return await client.setStatus(courier.id, "available");
+    };
+
+    // Paralelní setup — úspora ~150–300ms oproti sériovému řetězci.
+    const pair = (await Promise.all([mkReady(), mkReady()])) as [Courier, Courier];
+
+    await use(pair);
+
+    for (const c of pair) {
+      await request.patch(`/api/v1/couriers/${c.id}/status`, {
+        data: { status: "offline" },
+        failOnStatusCode: false,
+      });
+      await request.delete(`/api/v1/couriers/${c.id}`, {
+        failOnStatusCode: false,
+      });
+    }
   },
 });
 

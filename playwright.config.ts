@@ -14,7 +14,7 @@ function loadAuthHeaders(): Record<string, string> {
 }
 
 export default defineConfig({
-  testDir: "./tests",
+  testDir: ".",
   globalSetup: "./global-setup.ts",
 
   // Fail-fast retries lokálně, velkorysé v CI
@@ -33,8 +33,8 @@ export default defineConfig({
   projects: [
     {
       name: "api",
-      testMatch: /.*\.spec\.ts/,
-      testIgnore: /.*\.unauth\.spec\.ts/,
+      testMatch: ["tests/**/*.spec.ts", "graduation-project/**/*.spec.ts"],
+      testIgnore: "**/*.unauth.spec.ts",
       timeout: 30_000,
       use: {
         baseURL: env.BASE_URL,
@@ -44,7 +44,7 @@ export default defineConfig({
     },
     {
       name: "api-unauth",
-      testMatch: /.*\.unauth\.spec\.ts/,
+      testMatch: "**/*.unauth.spec.ts",
       timeout: 5_000,
       use: {
         baseURL: env.BASE_URL,
