@@ -6,6 +6,7 @@ import {
   OrderListSchema,
   OrderSchema,
 } from "../schemas/order";
+import { makeFakeOrder } from "../utils/factories";
 
 test.describe("Order schema contract tests", () => {
   test("GET pending orders s tokenem vrací validní pole", async ({
@@ -41,7 +42,7 @@ test.describe("Order schema contract tests", () => {
       required_tags: ["fragile"],
     };
 
-    const orderBody = OrderCreateSchema.parse(rawOrder);
+    const orderBody = makeFakeOrder();
 
     const createResponse = await request.post("/api/v1/orders/", {
       headers: {
