@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { createRequestContext } from "../helpers/request-factory";
+import { debugLogIfUnexpected } from "../utils/debug-log";
 
 test.describe("Invalid token — třetí auth state", () => {
   test("GET /api/v1/orders/pending s nevalidním tokenem vrací 401", async () => {
@@ -10,11 +11,7 @@ test.describe("Invalid token — třetí auth state", () => {
         failOnStatusCode: false,
       });
 
-      if (response.status() !== 401) {
-        const errBody = await response.text();
-        console.log(`[INVALID TOKEN DEBUG] status=${response.status()} body=${errBody}`);
-      }
-
+      await debugLogIfUnexpected(response, 401, "INVALID TOKEN DEBUG");
       expect(response.status()).toBe(401);
     } finally {
       await context.dispose();

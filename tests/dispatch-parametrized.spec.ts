@@ -1,6 +1,7 @@
 import { test, expect } from "../fixtures/api-fixtures";
 import { makeFakeCourier, makeFakeOrder } from "../utils/factories";
 import { OrderSchema } from "../schemas/order";
+import { safeCleanup } from "../utils/cleanup";
 import type { CourierCreate } from "../schemas/courier";
 import type { OrderCreate } from "../schemas/order";
 
@@ -64,16 +65,10 @@ test.describe("Dispatch — úspěšné scénáře", () => {
           expect(result.success).toBe(true);
         });
       } finally {
-        if (orderId !== null) {
-          await orders.cancel(orderId).catch(() => {});
-        }
-        if (courierId !== null) {
-          await couriers.setStatus(courierId, "offline").catch(() => {});
-          await couriers.tryDelete(courierId);
-        }
-        if (orderId !== null) {
-          await adminOrders.tryDelete(orderId);
-        }
+        await safeCleanup(orderId, (id) => orders.cancel(id));
+        await safeCleanup(courierId, (id) => couriers.setStatus(id, "offline"));
+        await safeCleanup(courierId, (id) => couriers.tryDelete(id));
+        await safeCleanup(orderId, (id) => adminOrders.tryDelete(id));
       }
     });
   });
@@ -113,16 +108,16 @@ test.describe("Dispatch — failing scénáře", () => {
         dispatchRes.status() === 422;
       expect(isFailure).toBe(true);
     } finally {
-      if (orderId) {
-        await request.post(`/api/v1/orders/${orderId}/cancel`, {
+      await safeCleanup(orderId, async (id) => {
+        await request.post(`/api/v1/orders/${id}/cancel`, {
           headers: { Authorization: `Bearer ${authToken}` },
           failOnStatusCode: false,
         });
-        await request.delete(`/api/v1/orders/${orderId}`, {
+        await request.delete(`/api/v1/orders/${id}`, {
           headers: { Authorization: `Bearer ${authToken}` },
           failOnStatusCode: false,
         });
-      }
+      });
     }
   });
 });

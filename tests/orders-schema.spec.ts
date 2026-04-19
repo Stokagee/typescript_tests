@@ -11,20 +11,12 @@ test.describe("Order schema contract tests", () => {
     expect(Array.isArray(orders)).toBe(true);
   });
 
-  test("Vytvoření objednávky vrací validní Order", async ({ request }) => {
-    const orderBody = makeFakeOrder();
-
-    const createResponse = await request.post("/api/v1/orders/", {
-      data: orderBody,
-    });
-    expect(createResponse.status()).toBe(201);
-
-    const createdOrder = await expectMatchesSchema(createResponse, OrderSchema);
+  test("Vytvoření objednávky vrací validní Order", async ({ orders, adminOrders }) => {
+    // OrdersClient.create už uvnitř ověřuje status 201 a parsuje přes OrderSchema
+    const createdOrder = await orders.create(makeFakeOrder());
     expect(createdOrder.status).toBe("CREATED");
 
-    await request.delete(`/api/v1/orders/${createdOrder.id}`, {
-      failOnStatusCode: false,
-    });
+    await adminOrders.tryDelete(createdOrder.id);
   });
 
   test("Schema detekuje contract break", () => {

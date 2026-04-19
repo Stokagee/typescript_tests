@@ -35,6 +35,15 @@ export class OrdersClient {
   }
 
   /**
+   * GET varianta bez asserce statusu. Použij pro existence checks (404 verifikace apod.).
+   */
+  async getByIdRaw(id: number): Promise<APIResponse> {
+    return await this.request.get(`${this.basePath}/${id}`, {
+      failOnStatusCode: false,
+    });
+  }
+
+  /**
    * Načte všechny pending objednávky.
    */
   async listPending(): Promise<Order[]> {
@@ -58,6 +67,18 @@ export class OrdersClient {
   async cancel(id: number): Promise<void> {
     const res = await this.request.post(`${this.basePath}/${id}/cancel`);
     expect(res.status()).toBe(200);
+  }
+
+  /**
+   * Admin operace — změna stavu objednávky přes PATCH /status.
+   * Vyžaduje admin-scope context (jinak 403).
+   */
+  async setStatus(id: number, status: OrderStatus): Promise<Order> {
+    const res = await this.request.patch(`${this.basePath}/${id}/status`, {
+      data: { status },
+    });
+    expect(res.status()).toBe(200);
+    return OrderSchema.parse(await res.json());
   }
 
   /**

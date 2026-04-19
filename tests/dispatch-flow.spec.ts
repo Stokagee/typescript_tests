@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { safeCleanup } from "../utils/cleanup";
 
 test("dispatch flow: create courier, set GPS, set available, verify in available list, cleanup", async ({
   request,
@@ -61,23 +62,18 @@ test("dispatch flow: create courier, set GPS, set available, verify in available
     const isPresentAfter = availableAfter.some((c) => c.id === courierId);
     expect(isPresentAfter).toBe(true);
   } finally {
-    // 6) Cleanup
-    if (courierId !== undefined) {
-      // Bonus: před mazáním vrať status zpět na offline
-      const offlineResponse = await request.patch(`/api/v1/couriers/${courierId}/status`, {
-        data: {
-          status: "offline",
-        },
+    // 6) Cleanup — best-effort, expect() asserce jsou informativní kontrola, že cleanup neselhal nečekaně
+    await safeCleanup(courierId, async (id) => {
+      const offlineResponse = await request.patch(`/api/v1/couriers/${id}/status`, {
+        data: { status: "offline" },
         failOnStatusCode: false,
       });
-
       expect([200, 404]).toContain(offlineResponse.status());
 
-      const deleteResponse = await request.delete(`/api/v1/couriers/${courierId}`, {
+      const deleteResponse = await request.delete(`/api/v1/couriers/${id}`, {
         failOnStatusCode: false,
       });
-
       expect([200, 204]).toContain(deleteResponse.status());
-    }
+    });
   }
 });
