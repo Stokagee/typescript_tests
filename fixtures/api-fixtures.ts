@@ -25,7 +25,6 @@ export const test = base.extend<ApiFixtures>({
     const context = await apiRequest.newContext({
       baseURL: "http://localhost:20300",
     });
-
     const response = await context.post("/api/v1/auth/test-token", {
       data: {
         username: "test_user",
@@ -34,11 +33,9 @@ export const test = base.extend<ApiFixtures>({
         scopes: "orders:read orders:write",
       },
     });
-
     if (!response.ok()) {
       throw new Error(`Token fetch failed: ${response.status()}`);
     }
-
     const body = await response.json();
     await use(body.access_token);
     await context.dispose();

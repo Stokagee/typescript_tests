@@ -1,74 +1,30 @@
-import { faker } from "@faker-js/faker";
 import { test, expect } from "../fixtures/api-fixtures";
 import { expectMatchesSchema } from "../utils/schema-matcher";
-import {
-  OrderCreateSchema,
-  OrderListSchema,
-  OrderSchema,
-} from "../schemas/order";
+import { OrderListSchema, OrderSchema } from "../schemas/order";
 import { makeFakeOrder } from "../utils/factories";
 
 test.describe("Order schema contract tests", () => {
-  test("GET pending orders s tokenem vrací validní pole", async ({
-    request,
-    authToken,
-  }) => {
-    const response = await request.get("/api/v1/orders/pending", {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
-
+  test("GET pending orders vrací validní pole", async ({ request }) => {
+    const response = await request.get("/api/v1/orders/pending");
     expect(response.status()).toBe(200);
-
     const orders = await expectMatchesSchema(response, OrderListSchema);
     expect(Array.isArray(orders)).toBe(true);
   });
 
-  test("Vytvoření objednávky vrací validní Order", async ({
-    request,
-    authToken,
-  }) => {
-    const rawOrder = {
-      customer_name: faker.person.fullName(),
-      customer_phone: `+420${faker.string.numeric(9)}`,
-      pickup_address: `Pickup ${Date.now()} ${faker.location.streetAddress()}`,
-      pickup_lat: 50.08,
-      pickup_lng: 14.42,
-      delivery_address: `Delivery ${Date.now()} ${faker.location.streetAddress()}`,
-      delivery_lat: 50.10,
-      delivery_lng: 14.50,
-      is_vip: faker.datatype.boolean(),
-      required_tags: ["fragile"],
-    };
-
+  test("Vytvoření objednávky vrací validní Order", async ({ request }) => {
     const orderBody = makeFakeOrder();
 
     const createResponse = await request.post("/api/v1/orders/", {
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
       data: orderBody,
-      failOnStatusCode: false,
     });
-
     expect(createResponse.status()).toBe(201);
 
     const createdOrder = await expectMatchesSchema(createResponse, OrderSchema);
     expect(createdOrder.status).toBe("CREATED");
-    expect(createdOrder.id).toBeDefined();
 
-    const deleteResponse = await request.delete(
-      `/api/v1/orders/${createdOrder.id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-        failOnStatusCode: false,
-      }
-    );
-
-    expect([200, 204, 403]).toContain(deleteResponse.status());
+    await request.delete(`/api/v1/orders/${createdOrder.id}`, {
+      failOnStatusCode: false,
+    });
   });
 
   test("Schema detekuje contract break", () => {

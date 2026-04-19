@@ -81,6 +81,10 @@ test.describe("Dispatch — úspěšné scénáře", () => {
             failOnStatusCode: false,
           }
         );
+        if (dispatchRes.status() !== 200) {
+          const errBody = await dispatchRes.text();
+          console.log(`[DISPATCH DEBUG] status=${dispatchRes.status()} body=${errBody}`);
+        }
         expect(dispatchRes.status()).toBe(200);
         const dispatchBody = await dispatchRes.json();
         expect(dispatchBody.success).toBe(true);

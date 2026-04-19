@@ -1,11 +1,9 @@
 import { defineConfig } from "@playwright/test";
 import { readFileSync, existsSync } from "node:fs";
 
-function loadAuthHeaders(): Record<string, string> {
+function getAuthHeaders(): Record<string, string> {
   const authFile = "playwright/.auth/user.json";
-  if (!existsSync(authFile)) {
-    return {};
-  }
+  if (!existsSync(authFile)) return {};
   try {
     const { token } = JSON.parse(readFileSync(authFile, "utf-8"));
     return { Authorization: `Bearer ${token}` };
@@ -25,7 +23,9 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       use: {
         baseURL: "http://localhost:20300",
-        extraHTTPHeaders: loadAuthHeaders(),
+        // Funkce se vyhodnotí LATE, při skutečném startu projectu,
+        // kdy už globalSetup doběhl
+        extraHTTPHeaders: getAuthHeaders(),
       },
     },
   ],
