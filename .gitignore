@@ -1,1 +1,3 @@
 playwright/.auth/
+.env
+.env.staging
