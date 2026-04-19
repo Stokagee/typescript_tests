@@ -1,6 +1,7 @@
 import { test, expect } from "../fixtures/api-fixtures";
 import { makeFakeOrder } from "../utils/factories";
 import { OrderSchema } from "../schemas/order";
+import { debugLogIfUnexpected } from "../utils/debug-log";
 
 test.describe("Admin operations — user vs admin", () => {
   test("DELETE objednávky: user dostane 403, admin úspěšně smaže", async ({
@@ -10,40 +11,48 @@ test.describe("Admin operations — user vs admin", () => {
     let orderId: number | null = null;
 
     try {
-      // 1. User vytvoří objednávku (auth přes extraHTTPHeaders)
-      const body = makeFakeOrder();
-      const createRes = await request.post("/api/v1/orders/", {
-        data: body,
-        failOnStatusCode: false,
+      orderId = await test.step("user vytvoří objednávku", async () => {
+        const body = makeFakeOrder();
+        const createRes = await request.post("/api/v1/orders/", {
+          data: body,
+          failOnStatusCode: false,
+        });
+        await debugLogIfUnexpected(createRes, 201, "USER CREATE DEBUG");
+        expect(createRes.status()).toBe(201);
+        const order = OrderSchema.parse(await createRes.json());
+        return order.id;
       });
-      expect(createRes.status()).toBe(201);
-      const order = OrderSchema.parse(await createRes.json());
-      orderId = order.id;
 
-      // 2. User se pokusí smazat → admin-only endpoint vrátí 403
-      const userDeleteRes = await request.delete(`/api/v1/orders/${orderId}`, {
-        failOnStatusCode: false,
+      await test.step("user dostane 403 při pokusu o delete", async () => {
+        const userDeleteRes = await request.delete(
+          `/api/v1/orders/${orderId}`,
+          { failOnStatusCode: false }
+        );
+        await debugLogIfUnexpected(userDeleteRes, 403, "USER DELETE DEBUG");
+        expect(userDeleteRes.status()).toBe(403);
       });
-      if (userDeleteRes.status() !== 403) {
-        const errBody = await userDeleteRes.text();
-        console.log(
-          `[USER DELETE DEBUG] status=${userDeleteRes.status()} body=${errBody}`
-        );
-      }
-      expect(userDeleteRes.status()).toBe(403);
 
-      // 3. Admin úspěšně smaže
-      const adminDeleteRes = await adminRequest.delete(
-        `/api/v1/orders/${orderId}`,
-        { failOnStatusCode: false }
-      );
-      if (![200, 204].includes(adminDeleteRes.status())) {
-        const errBody = await adminDeleteRes.text();
-        console.log(
-          `[ADMIN DELETE DEBUG] status=${adminDeleteRes.status()} body=${errBody}`
+      await test.step("admin úspěšně smaže", async () => {
+        const adminDeleteRes = await adminRequest.delete(
+          `/api/v1/orders/${orderId}`,
+          { failOnStatusCode: false }
         );
-      }
-      expect([200, 204]).toContain(adminDeleteRes.status());
+        await debugLogIfUnexpected(
+          adminDeleteRes,
+          [200, 204],
+          "ADMIN DELETE DEBUG"
+        );
+        expect([200, 204]).toContain(adminDeleteRes.status());
+      });
+
+      await test.step("verifikace - objednávka už neexistuje", async () => {
+        const verifyRes = await adminRequest.get(`/api/v1/orders/${orderId}`, {
+          failOnStatusCode: false,
+        });
+        await debugLogIfUnexpected(verifyRes, 404, "VERIFY 404 DEBUG");
+        expect(verifyRes.status()).toBe(404);
+      });
+
       orderId = null; // úspěšně smazáno → necleanup
     } finally {
       if (orderId !== null) {
@@ -78,12 +87,7 @@ test.describe("Admin operations — user vs admin", () => {
           failOnStatusCode: false,
         }
       );
-      if (patchRes.status() !== 200) {
-        const errBody = await patchRes.text();
-        console.log(
-          `[ADMIN PATCH DEBUG] status=${patchRes.status()} body=${errBody}`
-        );
-      }
+      await debugLogIfUnexpected(patchRes, 200, "ADMIN PATCH DEBUG");
       expect(patchRes.status()).toBe(200);
 
       const updated = OrderSchema.parse(await patchRes.json());

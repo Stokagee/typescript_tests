@@ -24,11 +24,11 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
 
   reporter: [
-    ["list"],
-    ["html", { open: "never" }],
-    // JUnit pro CI - přidáme v Phase 11
-    ...(process.env.CI ? [["junit", { outputFile: "test-results/junit.xml" }] as const] : []),
-  ],
+  ["list"],
+  ["html", { open: "never" }],
+  ["allure-playwright", { detail: true, outputFolder: "allure-results" }],
+  ...(process.env.CI ? [["junit", { outputFile: "test-results/junit.xml" }] as const] : []),
+],
 
   projects: [
     {
@@ -39,6 +39,7 @@ export default defineConfig({
       use: {
         baseURL: env.BASE_URL,
         extraHTTPHeaders: loadAuthHeaders(),
+        trace: "retain-on-failure",   // Pro CI "on-first-retry".
       },
     },
     {

@@ -36,58 +36,65 @@ test.describe("Dispatch — úspěšné scénáře", () => {
       let orderId: number | null = null;
 
       try {
-        // 1. Vytvoř kurýra
-        const courierBody = makeFakeCourier(courierOverrides);
-        const courierRes = await request.post("/api/v1/couriers/", {
-          data: courierBody,
-          failOnStatusCode: false,
-        });
-        expect(courierRes.status()).toBe(201);
-        const courier = CourierSchema.parse(await courierRes.json());
-        courierId = courier.id;
-
-        // 2. Nastav GPS kurýrovi
-        await request.patch(`/api/v1/couriers/${courierId}/location`, {
-          data: { lat: 50.08, lng: 14.42 },
-          failOnStatusCode: false,
-        });
-
-        // 3. Nastav status kurýra na available
-        await request.patch(`/api/v1/couriers/${courierId}/status`, {
-          data: { status: "available" },
-          failOnStatusCode: false,
-        });
-
-        // 4. Vytvoř objednávku s pickup blízko kurýra
-        const orderBody = makeFakeOrder({
-          ...orderOverrides,
-          pickup_lat: 50.08,
-          pickup_lng: 14.42,
-        });
-        const orderRes = await request.post("/api/v1/orders/", {
-          headers: { Authorization: `Bearer ${authToken}` },
-          data: orderBody,
-          failOnStatusCode: false,
-        });
-        expect(orderRes.status()).toBe(201);
-        const order = OrderSchema.parse(await orderRes.json());
-        orderId = order.id;
-
-        // 5. Dispatch
-        const dispatchRes = await request.post(
-          `/api/v1/dispatch/auto/${orderId}`,
-          {
-            headers: { Authorization: `Bearer ${authToken}` },
+        courierId = await test.step("vytvoř kurýra", async () => {
+          const courierBody = makeFakeCourier(courierOverrides);
+          const courierRes = await request.post("/api/v1/couriers/", {
+            data: courierBody,
             failOnStatusCode: false,
+          });
+          expect(courierRes.status()).toBe(201);
+          const courier = CourierSchema.parse(await courierRes.json());
+          return courier.id;
+        });
+
+        await test.step("nastav GPS kurýrovi", async () => {
+          await request.patch(`/api/v1/couriers/${courierId}/location`, {
+            data: { lat: 50.08, lng: 14.42 },
+            failOnStatusCode: false,
+          });
+        });
+
+        await test.step("nastav status kurýra na available", async () => {
+          await request.patch(`/api/v1/couriers/${courierId}/status`, {
+            data: { status: "available" },
+            failOnStatusCode: false,
+          });
+        });
+
+        orderId = await test.step("vytvoř objednávku", async () => {
+          const orderBody = makeFakeOrder({
+            ...orderOverrides,
+            pickup_lat: 50.08,
+            pickup_lng: 14.42,
+          });
+          const orderRes = await request.post("/api/v1/orders/", {
+            headers: { Authorization: `Bearer ${authToken}` },
+            data: orderBody,
+            failOnStatusCode: false,
+          });
+          expect(orderRes.status()).toBe(201);
+          const order = OrderSchema.parse(await orderRes.json());
+          return order.id;
+        });
+
+        await test.step("dispatch objednávky", async () => {
+          const dispatchRes = await request.post(
+            `/api/v1/dispatch/auto/${orderId}`,
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+              failOnStatusCode: false,
+            }
+          );
+          if (dispatchRes.status() !== 200) {
+            const errBody = await dispatchRes.text();
+            console.log(
+              `[DISPATCH DEBUG] status=${dispatchRes.status()} body=${errBody}`
+            );
           }
-        );
-        if (dispatchRes.status() !== 200) {
-          const errBody = await dispatchRes.text();
-          console.log(`[DISPATCH DEBUG] status=${dispatchRes.status()} body=${errBody}`);
-        }
-        expect(dispatchRes.status()).toBe(200);
-        const dispatchBody = await dispatchRes.json();
-        expect(dispatchBody.success).toBe(true);
+          expect(dispatchRes.status()).toBe(200);
+          const dispatchBody = await dispatchRes.json();
+          expect(dispatchBody.success).toBe(true);
+        });
       } finally {
         if (orderId) {
           await request.post(`/api/v1/orders/${orderId}/cancel`, {
