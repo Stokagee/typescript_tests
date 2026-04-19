@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { faker } from "@faker-js/faker";
 import { CourierSchema } from "../schemas/courier";
 import type { Courier } from "../schemas/courier";
+import { env } from "../config/env";
 
 type ApiFixtures = {
   authToken: string;
@@ -52,7 +53,7 @@ export const test = base.extend<ApiFixtures>({
       readFileSync("playwright/.auth/admin.json", "utf-8")
     );
     const context = await apiRequest.newContext({
-      baseURL: "http://localhost:20300",
+      baseURL: env.BASE_URL,
       extraHTTPHeaders: {
         Authorization: `Bearer ${token}`,
       },

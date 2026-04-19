@@ -1,9 +1,9 @@
 import { request, FullConfig } from "@playwright/test";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { env } from "./config/env";
 
 type TokenParams = {
-  baseURL: string;
   username: string;
   role: "user" | "admin";
   userId: number;
@@ -12,7 +12,7 @@ type TokenParams = {
 };
 
 async function fetchToken(params: TokenParams): Promise<void> {
-  const context = await request.newContext({ baseURL: params.baseURL });
+  const context = await request.newContext({ baseURL: env.BASE_URL });
 
   const response = await context.post("/api/v1/auth/test-token", {
     data: {
@@ -37,31 +37,29 @@ async function fetchToken(params: TokenParams): Promise<void> {
   writeFileSync(params.filePath, JSON.stringify({ token }, null, 2));
 
   console.log(
-    `✓ Global setup: ${params.role} token uložen do ${params.filePath}`
+    `✓ Global setup [${env.TEST_ENV}]: ${params.role} token uložen`
   );
 
   await context.dispose();
 }
 
 async function globalSetup(_config: FullConfig) {
-  const baseURL = "http://localhost:20300";
+  console.log(`🔧 Running global setup for TEST_ENV=${env.TEST_ENV}`);
+  console.log(`🔧 BASE_URL=${env.BASE_URL}`);
 
   await fetchToken({
-    baseURL,
-    username: "test_user",
+    username: env.TEST_USER_USERNAME,
     role: "user",
-    userId: 1,
-    scopes: "orders:read orders:write couriers:read couriers:write",
+    userId: env.TEST_USER_ID,
+    scopes: env.TEST_USER_SCOPES,
     filePath: "playwright/.auth/user.json",
   });
 
   await fetchToken({
-    baseURL,
-    username: "test_admin",
+    username: env.TEST_ADMIN_USERNAME,
     role: "admin",
-    userId: 2,
-    scopes:
-      "orders:read orders:write orders:admin couriers:read couriers:write",
+    userId: env.TEST_ADMIN_ID,
+    scopes: env.TEST_ADMIN_SCOPES,
     filePath: "playwright/.auth/admin.json",
   });
 }
