@@ -37,3 +37,6 @@ pnpm-debug.log*
 
 # Claude Code agent metadata
 .claude/
+allure-results/
+allure-report/
+allure-report/
