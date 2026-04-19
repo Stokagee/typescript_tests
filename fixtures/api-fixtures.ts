@@ -1,4 +1,9 @@
-import { test as base, request as apiRequest } from "@playwright/test";
+import {
+  test as base,
+  request as apiRequest,
+  type APIRequestContext,
+} from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { faker } from "@faker-js/faker";
 import { CourierSchema } from "../schemas/courier";
 import type { Courier } from "../schemas/courier";
@@ -7,6 +12,7 @@ type ApiFixtures = {
   authToken: string;
   testCourier: Courier;
   availableCourier: Courier;
+  adminRequest: APIRequestContext;
 };
 
 function makeFakeCourierData() {
@@ -38,6 +44,20 @@ export const test = base.extend<ApiFixtures>({
     }
     const body = await response.json();
     await use(body.access_token);
+    await context.dispose();
+  },
+
+  adminRequest: async ({}, use) => {
+    const { token } = JSON.parse(
+      readFileSync("playwright/.auth/admin.json", "utf-8")
+    );
+    const context = await apiRequest.newContext({
+      baseURL: "http://localhost:20300",
+      extraHTTPHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    await use(context);
     await context.dispose();
   },
 

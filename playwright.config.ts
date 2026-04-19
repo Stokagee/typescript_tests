@@ -23,9 +23,17 @@ export default defineConfig({
     {
       name: "api",
       testMatch: /.*\.spec\.ts/,
+      testIgnore: /.*\.unauth\.spec\.ts/,
       use: {
         baseURL: "http://localhost:20300",
         extraHTTPHeaders: loadAuthHeaders(),
+      },
+    },
+    {
+      name: "api-unauth",
+      testMatch: /.*\.unauth\.spec\.ts/,
+      use: {
+        baseURL: "http://localhost:20300",
       },
     },
   ],
