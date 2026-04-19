@@ -22,10 +22,7 @@ export default defineConfig({
   
   // Paralelismus - CI často má omezené cores
   workers: process.env.CI ? 2 : undefined,
-  
-  // Timeout per test (default 30s je OK, ale ukážu override)
-  timeout: 30_000,
-  
+
   reporter: [
     ["list"],
     ["html", { open: "never" }],
@@ -38,6 +35,7 @@ export default defineConfig({
       name: "api",
       testMatch: /.*\.spec\.ts/,
       testIgnore: /.*\.unauth\.spec\.ts/,
+      timeout: 30_000,
       use: {
         baseURL: env.BASE_URL,
         extraHTTPHeaders: loadAuthHeaders(),
@@ -46,6 +44,7 @@ export default defineConfig({
     {
       name: "api-unauth",
       testMatch: /.*\.unauth\.spec\.ts/,
+      timeout: 5_000,
       use: {
         baseURL: env.BASE_URL,
       },
