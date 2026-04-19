@@ -1,7 +1,4 @@
-import {
-  request as apiRequest,
-  type APIRequestContext,
-} from "@playwright/test";
+import { request as apiRequest, type APIRequestContext } from "@playwright/test";
 import { env } from "../config/env";
 
 export type RequestContextOptions = {
@@ -19,7 +16,7 @@ export async function createRequestContext(
   const baseURL = options?.baseURL ?? env.BASE_URL;
   const headers: Record<string, string> = {};
   if (options?.token) {
-    headers.Authorization = `Bearer ${options.token}`;
+    headers["Authorization"] = `Bearer ${options.token}`;
   }
   return await apiRequest.newContext({
     baseURL,

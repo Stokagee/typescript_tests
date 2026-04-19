@@ -26,24 +26,18 @@ test("plný CRUD cyklus na kurýrovi", async ({ request }) => {
   expect(fetched.name).toBe("Test Kurýr");
 
   // ---------- 3) PATCH location ----------
-  const locResponse = await request.patch(
-    `/api/v1/couriers/${courierId}/location`,
-    {
-      data: { lat: 50.0875, lng: 14.4213 },
-    }
-  );
+  const locResponse = await request.patch(`/api/v1/couriers/${courierId}/location`, {
+    data: { lat: 50.0875, lng: 14.4213 },
+  });
   expect(locResponse.status()).toBe(200);
   const located = await locResponse.json();
   expect(located.lat).toBeCloseTo(50.0875, 4);
   expect(located.lng).toBeCloseTo(14.4213, 4);
 
   // ---------- 4) PATCH status ----------
-  const statusResponse = await request.patch(
-    `/api/v1/couriers/${courierId}/status`,
-    {
-      data: { status: "available" },
-    }
-  );
+  const statusResponse = await request.patch(`/api/v1/couriers/${courierId}/status`, {
+    data: { status: "available" },
+  });
   expect(statusResponse.status()).toBe(200);
   const statusUpdated = await statusResponse.json();
   expect(statusUpdated.status).toBe("available");
@@ -62,9 +56,7 @@ test("plný CRUD cyklus na kurýrovi", async ({ request }) => {
   expect(updated.tags).toContain("vip");
 
   // ---------- 6) DELETE ----------
-  const deleteResponse = await request.delete(
-    `/api/v1/couriers/${courierId}`
-  );
+  const deleteResponse = await request.delete(`/api/v1/couriers/${courierId}`);
   expect([200, 204]).toContain(deleteResponse.status());
 
   // ---------- 7) Ověř, že je opravdu pryč ----------

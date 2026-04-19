@@ -1,19 +1,21 @@
-import {
-  test as base,
-  request as apiRequest,
-  type APIRequestContext,
-} from "@playwright/test";
+import { test as base, request as apiRequest, type APIRequestContext } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { faker } from "@faker-js/faker";
 import { CourierSchema } from "../schemas/courier";
 import type { Courier } from "../schemas/courier";
 import { env } from "../config/env";
+import { OrdersClient, CouriersClient, DispatchClient } from "../api/clients";
 
 type ApiFixtures = {
   authToken: string;
   testCourier: Courier;
   availableCourier: Courier;
   adminRequest: APIRequestContext;
+  // API clients
+  orders: OrdersClient;
+  couriers: CouriersClient;
+  dispatch: DispatchClient;
+  adminOrders: OrdersClient;
 };
 
 function makeFakeCourierData() {
@@ -28,6 +30,7 @@ function makeFakeCourierData() {
 }
 
 export const test = base.extend<ApiFixtures>({
+  // eslint-disable-next-line no-empty-pattern
   authToken: async ({}, use) => {
     const context = await apiRequest.newContext({
       baseURL: "http://localhost:20300",
@@ -48,10 +51,9 @@ export const test = base.extend<ApiFixtures>({
     await context.dispose();
   },
 
+  // eslint-disable-next-line no-empty-pattern
   adminRequest: async ({}, use) => {
-    const { token } = JSON.parse(
-      readFileSync("playwright/.auth/admin.json", "utf-8")
-    );
+    const { token } = JSON.parse(readFileSync("playwright/.auth/admin.json", "utf-8"));
     const context = await apiRequest.newContext({
       baseURL: env.BASE_URL,
       extraHTTPHeaders: {
@@ -77,9 +79,7 @@ export const test = base.extend<ApiFixtures>({
 
     if (createResponse.status() !== 201) {
       const errBody = await createResponse.text();
-      throw new Error(
-        `Failed to create test courier: ${createResponse.status()}\n${errBody}`
-      );
+      throw new Error(`Failed to create test courier: ${createResponse.status()}\n${errBody}`);
     }
 
     const courier = CourierSchema.parse(await createResponse.json());
@@ -106,47 +106,35 @@ export const test = base.extend<ApiFixtures>({
 
     if (createResponse.status() !== 201) {
       const errBody = await createResponse.text();
-      throw new Error(
-        `Failed to create available courier: ${createResponse.status()}\n${errBody}`
-      );
+      throw new Error(`Failed to create available courier: ${createResponse.status()}\n${errBody}`);
     }
 
     const createdCourier = (await createResponse.json()) as Courier;
     const courierId = createdCourier.id;
 
-    const locationResponse = await request.patch(
-      `/api/v1/couriers/${courierId}/location`,
-      {
-        data: {
-          lat: 50.08,
-          lng: 14.42,
-        },
-        failOnStatusCode: false,
-      }
-    );
+    const locationResponse = await request.patch(`/api/v1/couriers/${courierId}/location`, {
+      data: {
+        lat: 50.08,
+        lng: 14.42,
+      },
+      failOnStatusCode: false,
+    });
 
     if (locationResponse.status() !== 200) {
       const errBody = await locationResponse.text();
-      throw new Error(
-        `Failed to set courier location: ${locationResponse.status()}\n${errBody}`
-      );
+      throw new Error(`Failed to set courier location: ${locationResponse.status()}\n${errBody}`);
     }
 
-    const statusResponse = await request.patch(
-      `/api/v1/couriers/${courierId}/status`,
-      {
-        data: {
-          status: "available",
-        },
-        failOnStatusCode: false,
-      }
-    );
+    const statusResponse = await request.patch(`/api/v1/couriers/${courierId}/status`, {
+      data: {
+        status: "available",
+      },
+      failOnStatusCode: false,
+    });
 
     if (statusResponse.status() !== 200) {
       const errBody = await statusResponse.text();
-      throw new Error(
-        `Failed to set courier status: ${statusResponse.status()}\n${errBody}`
-      );
+      throw new Error(`Failed to set courier status: ${statusResponse.status()}\n${errBody}`);
     }
 
     const courier = (await statusResponse.json()) as Courier;
@@ -161,6 +149,24 @@ export const test = base.extend<ApiFixtures>({
     await request.delete(`/api/v1/couriers/${courier.id}`, {
       failOnStatusCode: false,
     });
+  },
+
+  // API clients jako fixtures — snižují boilerplate v testech
+  orders: async ({ request }, use) => {
+    await use(new OrdersClient(request));
+  },
+
+  couriers: async ({ request }, use) => {
+    await use(new CouriersClient(request));
+  },
+
+  dispatch: async ({ request }, use) => {
+    await use(new DispatchClient(request));
+  },
+
+  adminOrders: async ({ adminRequest }, use) => {
+    // admin-scope OrdersClient — používej pro DELETE/admin operace
+    await use(new OrdersClient(adminRequest));
   },
 });
 

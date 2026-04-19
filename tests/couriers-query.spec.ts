@@ -20,9 +20,7 @@ test.describe("Query a path parametry", () => {
     expect(response.status()).toBe(404);
   });
 
-  test("dostupní kurýři - prázdné pole je validní výsledek", async ({
-    request, }) =>
-  {
+  test("dostupní kurýři - prázdné pole je validní výsledek", async ({ request }) => {
     const response = await request.get("/api/v1/couriers/available");
     expect(response.status()).toBe(200);
     const body = (await response.json()) as unknown[];

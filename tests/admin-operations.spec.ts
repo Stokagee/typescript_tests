@@ -24,24 +24,18 @@ test.describe("Admin operations — user vs admin", () => {
       });
 
       await test.step("user dostane 403 při pokusu o delete", async () => {
-        const userDeleteRes = await request.delete(
-          `/api/v1/orders/${orderId}`,
-          { failOnStatusCode: false }
-        );
+        const userDeleteRes = await request.delete(`/api/v1/orders/${orderId}`, {
+          failOnStatusCode: false,
+        });
         await debugLogIfUnexpected(userDeleteRes, 403, "USER DELETE DEBUG");
         expect(userDeleteRes.status()).toBe(403);
       });
 
       await test.step("admin úspěšně smaže", async () => {
-        const adminDeleteRes = await adminRequest.delete(
-          `/api/v1/orders/${orderId}`,
-          { failOnStatusCode: false }
-        );
-        await debugLogIfUnexpected(
-          adminDeleteRes,
-          [200, 204],
-          "ADMIN DELETE DEBUG"
-        );
+        const adminDeleteRes = await adminRequest.delete(`/api/v1/orders/${orderId}`, {
+          failOnStatusCode: false,
+        });
+        await debugLogIfUnexpected(adminDeleteRes, [200, 204], "ADMIN DELETE DEBUG");
         expect([200, 204]).toContain(adminDeleteRes.status());
       });
 
@@ -80,13 +74,10 @@ test.describe("Admin operations — user vs admin", () => {
       orderId = order.id;
 
       // Admin mění status — přechod CREATED → CANCELLED
-      const patchRes = await adminRequest.patch(
-        `/api/v1/orders/${orderId}/status`,
-        {
-          data: { status: "CANCELLED" },
-          failOnStatusCode: false,
-        }
-      );
+      const patchRes = await adminRequest.patch(`/api/v1/orders/${orderId}/status`, {
+        data: { status: "CANCELLED" },
+        failOnStatusCode: false,
+      });
       await debugLogIfUnexpected(patchRes, 200, "ADMIN PATCH DEBUG");
       expect(patchRes.status()).toBe(200);
 

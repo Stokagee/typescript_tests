@@ -23,9 +23,7 @@ test("dispatch flow: create courier, set GPS, set available, verify in available
     courierId = created.id as number;
 
     // 2) Ověř, že NENÍ v available
-    const availableBeforeResponse = await request.get(
-      "/api/v1/couriers/available"
-    );
+    const availableBeforeResponse = await request.get("/api/v1/couriers/available");
     expect(availableBeforeResponse.status()).toBe(200);
 
     const availableBefore = (await availableBeforeResponse.json()) as Array<{
@@ -36,32 +34,24 @@ test("dispatch flow: create courier, set GPS, set available, verify in available
     expect(isPresentBefore).toBe(false);
 
     // 3) PATCH location
-    const locationResponse = await request.patch(
-      `/api/v1/couriers/${courierId}/location`,
-      {
-        data: {
-          lat: 50.08,
-          lng: 14.42,
-        },
-      }
-    );
+    const locationResponse = await request.patch(`/api/v1/couriers/${courierId}/location`, {
+      data: {
+        lat: 50.08,
+        lng: 14.42,
+      },
+    });
     expect(locationResponse.status()).toBe(200);
 
     // 4) PATCH status
-    const statusResponse = await request.patch(
-      `/api/v1/couriers/${courierId}/status`,
-      {
-        data: {
-          status: "available",
-        },
-      }
-    );
+    const statusResponse = await request.patch(`/api/v1/couriers/${courierId}/status`, {
+      data: {
+        status: "available",
+      },
+    });
     expect(statusResponse.status()).toBe(200);
 
     // 5) Ověř, že JE v available
-    const availableAfterResponse = await request.get(
-      "/api/v1/couriers/available"
-    );
+    const availableAfterResponse = await request.get("/api/v1/couriers/available");
     expect(availableAfterResponse.status()).toBe(200);
 
     const availableAfter = (await availableAfterResponse.json()) as Array<{
@@ -74,24 +64,18 @@ test("dispatch flow: create courier, set GPS, set available, verify in available
     // 6) Cleanup
     if (courierId !== undefined) {
       // Bonus: před mazáním vrať status zpět na offline
-      const offlineResponse = await request.patch(
-        `/api/v1/couriers/${courierId}/status`,
-        {
-          data: {
-            status: "offline",
-          },
-          failOnStatusCode: false,
-        }
-      );
+      const offlineResponse = await request.patch(`/api/v1/couriers/${courierId}/status`, {
+        data: {
+          status: "offline",
+        },
+        failOnStatusCode: false,
+      });
 
       expect([200, 404]).toContain(offlineResponse.status());
 
-      const deleteResponse = await request.delete(
-        `/api/v1/couriers/${courierId}`,
-        {
-          failOnStatusCode: false,
-        }
-      );
+      const deleteResponse = await request.delete(`/api/v1/couriers/${courierId}`, {
+        failOnStatusCode: false,
+      });
 
       expect([200, 204]).toContain(deleteResponse.status());
     }

@@ -11,7 +11,9 @@ type FixtureOrder = {
 };
 
 test.describe("Objednávky z JSON fixture dat", () => {
-  const realisticOrders = JSON.parse(readFileSync(resolve(__dirname, "../test-data/realistic-order.json"), "utf-8")) as FixtureOrder[];
+  const realisticOrders = JSON.parse(
+    readFileSync(resolve(__dirname, "../test-data/realistic-order.json"), "utf-8")
+  ) as FixtureOrder[];
   realisticOrders.forEach(({ name, data }) => {
     test(`vytvoří: ${name}`, async ({ request, authToken }) => {
       // Validuj fixture data proti schématu - pojistka proti rotten test data

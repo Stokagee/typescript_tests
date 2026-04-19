@@ -5,9 +5,7 @@ import { makeFakeOrder } from "../utils/factories";
 // Ověřují, že chráněné endpointy bez autentizace vrací 401.
 
 test.describe("Auth-required endpointy bez tokenu vrací 401", () => {
-  test("GET /api/v1/orders/pending vrací 401 bez tokenu", async ({
-    request,
-  }) => {
+  test("GET /api/v1/orders/pending vrací 401 bez tokenu", async ({ request }) => {
     const response = await request.get("/api/v1/orders/pending", {
       failOnStatusCode: false,
     });
@@ -23,9 +21,7 @@ test.describe("Auth-required endpointy bez tokenu vrací 401", () => {
     expect(response.status()).toBe(401);
   });
 
-  test("GET /api/v1/orders/by-status/CREATED vrací 401 bez tokenu", async ({
-    request,
-  }) => {
+  test("GET /api/v1/orders/by-status/CREATED vrací 401 bez tokenu", async ({ request }) => {
     const response = await request.get("/api/v1/orders/by-status/CREATED", {
       failOnStatusCode: false,
     });

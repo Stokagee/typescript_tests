@@ -12,9 +12,7 @@ test.describe("Invalid token — třetí auth state", () => {
 
       if (response.status() !== 401) {
         const errBody = await response.text();
-        console.log(
-          `[INVALID TOKEN DEBUG] status=${response.status()} body=${errBody}`
-        );
+        console.log(`[INVALID TOKEN DEBUG] status=${response.status()} body=${errBody}`);
       }
 
       expect(response.status()).toBe(401);

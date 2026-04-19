@@ -36,9 +36,7 @@ async function fetchToken(params: TokenParams): Promise<void> {
   mkdirSync(dirname(params.filePath), { recursive: true });
   writeFileSync(params.filePath, JSON.stringify({ token }, null, 2));
 
-  console.log(
-    `✓ Global setup [${env.TEST_ENV}]: ${params.role} token uložen`
-  );
+  console.log(`✓ Global setup [${env.TEST_ENV}]: ${params.role} token uložen`);
 
   await context.dispose();
 }

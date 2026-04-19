@@ -11,9 +11,7 @@ import { CourierCreateSchema } from "../schemas/courier";
  * @param overrides částečný objekt, jehož fieldy nahradí defaults
  * @returns validovaný OrderCreate
  */
-export function makeFakeOrder(
-  overrides?: Partial<OrderCreate>
-): OrderCreate {
+export function makeFakeOrder(overrides?: Partial<OrderCreate>): OrderCreate {
   const defaults: OrderCreate = {
     customer_name: faker.person.fullName(),
     customer_phone: `+420${faker.string.numeric(9)}`,

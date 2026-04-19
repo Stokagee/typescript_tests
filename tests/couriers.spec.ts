@@ -16,6 +16,6 @@ test("GET /couriers podporuje paging přes limit", async ({ request }) => {
 
   expect(response.status()).toBe(200);
 
-  const body = await response.json() as unknown[];
+  const body = (await response.json()) as unknown[];
   expect(body.length).toBeLessThanOrEqual(2);
 });

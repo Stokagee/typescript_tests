@@ -9,6 +9,8 @@ const isOnline: boolean = true;
 const tags: string[] = ["bike", "fast", "vip"];
 const coordinates: [number, number] = [50.0755, 14.4378]; // tuple - pevná délka
 
+console.log({ courierName, isOnline, tags, coordinates });
+
 // ---------- 3) Interface - tvar objektu ----------
 interface Courier {
   id: number;
@@ -16,7 +18,7 @@ interface Courier {
   phone: string;
   status: "offline" | "available" | "busy"; // union type - jen tyhle 3 hodnoty
   tags: string[];
-  lat?: number;  // ? = optional, může chybět
+  lat?: number; // ? = optional, může chybět
   lng?: number;
 }
 

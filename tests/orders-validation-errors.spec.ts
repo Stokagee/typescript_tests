@@ -1,6 +1,5 @@
 import { test, expect } from "../fixtures/api-fixtures";
 import { makeFakeOrder } from "../utils/factories";
-import type { OrderCreate } from "../schemas/order";
 
 type ValidationCase = {
   name: string;

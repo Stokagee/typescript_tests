@@ -1,6 +1,5 @@
 import { test, expect, request as apiRequest } from "@playwright/test";
 
-
 test.describe("Public non-auth endpoints", () => {
   test("GET / vrací 200 a obsahuje message a docs", async ({ request }) => {
     const response = await request.get("/");

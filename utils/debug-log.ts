@@ -10,13 +10,9 @@ export async function debugLogIfUnexpected(
   label = "UNEXPECTED"
 ): Promise<void> {
   const actual = response.status();
-  const expectedArr = Array.isArray(expectedStatus)
-    ? expectedStatus
-    : [expectedStatus];
+  const expectedArr = Array.isArray(expectedStatus) ? expectedStatus : [expectedStatus];
   if (!expectedArr.includes(actual)) {
     const body = await response.text();
-    console.log(
-      `[${label}] expected=${expectedArr.join("|")} actual=${actual} body=${body}`
-    );
+    console.log(`[${label}] expected=${expectedArr.join("|")} actual=${actual} body=${body}`);
   }
 }

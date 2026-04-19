@@ -2,13 +2,7 @@ interface Order {
   id: number;
   customer_name: string;
   customer_phone: string;
-  status:
-    | "CREATED"
-    | "SEARCHING"
-    | "ASSIGNED"
-    | "PICKED"
-    | "DELIVERED"
-    | "CANCELLED";
+  status: "CREATED" | "SEARCHING" | "ASSIGNED" | "PICKED" | "DELIVERED" | "CANCELLED";
   pickup_address: string;
   delivery_address: string;
   is_vip: boolean;

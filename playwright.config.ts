@@ -16,19 +16,19 @@ function loadAuthHeaders(): Record<string, string> {
 export default defineConfig({
   testDir: "./tests",
   globalSetup: "./global-setup.ts",
-  
+
   // Fail-fast retries lokálně, velkorysé v CI
-  retries: process.env.CI ? 2 : 0,
-  
-  // Paralelismus - CI často má omezené cores
-  workers: process.env.CI ? 2 : undefined,
+  retries: process.env["CI"] ? 2 : 0,
+
+  // Paralelismus - CI často má omezené cores; lokálně necháme Playwright default
+  ...(process.env["CI"] ? { workers: 2 } : {}),
 
   reporter: [
-  ["list"],
-  ["html", { open: "never" }],
-  ["allure-playwright", { detail: true, outputFolder: "allure-results" }],
-  ...(process.env.CI ? [["junit", { outputFile: "test-results/junit.xml" }] as const] : []),
-],
+    ["list"],
+    ["html", { open: "never" }],
+    ["allure-playwright", { detail: true, outputFolder: "allure-results" }],
+    ...(process.env["CI"] ? [["junit", { outputFile: "test-results/junit.xml" }] as const] : []),
+  ],
 
   projects: [
     {
@@ -39,7 +39,7 @@ export default defineConfig({
       use: {
         baseURL: env.BASE_URL,
         extraHTTPHeaders: loadAuthHeaders(),
-        trace: "retain-on-failure",   // Pro CI "on-first-retry".
+        trace: "retain-on-failure", // Pro CI "on-first-retry".
       },
     },
     {

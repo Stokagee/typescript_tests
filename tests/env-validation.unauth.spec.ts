@@ -2,9 +2,7 @@ import { test, expect } from "@playwright/test";
 import { env } from "../config/env";
 
 test.describe("Env validace — fail-fast kontrola prostředí", () => {
-  test("BASE_URL ukazuje na živý API server (GET / vrací message)", async ({
-    request,
-  }) => {
+  test("BASE_URL ukazuje na živý API server (GET / vrací message)", async ({ request }) => {
     const response = await request.get("/");
     expect(response.status()).toBe(200);
 

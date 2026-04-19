@@ -1,6 +1,5 @@
 import { test, expect } from "../fixtures/api-fixtures";
 import { makeFakeCourier, makeFakeOrder } from "../utils/factories";
-import { CourierSchema } from "../schemas/courier";
 import { OrderSchema } from "../schemas/order";
 import type { CourierCreate } from "../schemas/courier";
 import type { OrderCreate } from "../schemas/order";
@@ -31,91 +30,49 @@ const successScenarios: DispatchScenario[] = [
 
 test.describe("Dispatch — úspěšné scénáře", () => {
   successScenarios.forEach(({ name, orderOverrides, courierOverrides }) => {
-    test(`dispatch: ${name}`, async ({ request, authToken }) => {
+    test(`dispatch: ${name}`, async ({ orders, couriers, dispatch, adminOrders }) => {
       let courierId: number | null = null;
       let orderId: number | null = null;
 
       try {
         courierId = await test.step("vytvoř kurýra", async () => {
-          const courierBody = makeFakeCourier(courierOverrides);
-          const courierRes = await request.post("/api/v1/couriers/", {
-            data: courierBody,
-            failOnStatusCode: false,
-          });
-          expect(courierRes.status()).toBe(201);
-          const courier = CourierSchema.parse(await courierRes.json());
+          const courier = await couriers.create(makeFakeCourier(courierOverrides));
           return courier.id;
         });
 
         await test.step("nastav GPS kurýrovi", async () => {
-          await request.patch(`/api/v1/couriers/${courierId}/location`, {
-            data: { lat: 50.08, lng: 14.42 },
-            failOnStatusCode: false,
-          });
+          await couriers.setLocation(courierId!, 50.08, 14.42);
         });
 
         await test.step("nastav status kurýra na available", async () => {
-          await request.patch(`/api/v1/couriers/${courierId}/status`, {
-            data: { status: "available" },
-            failOnStatusCode: false,
-          });
+          await couriers.setStatus(courierId!, "available");
         });
 
         orderId = await test.step("vytvoř objednávku", async () => {
-          const orderBody = makeFakeOrder({
-            ...orderOverrides,
-            pickup_lat: 50.08,
-            pickup_lng: 14.42,
-          });
-          const orderRes = await request.post("/api/v1/orders/", {
-            headers: { Authorization: `Bearer ${authToken}` },
-            data: orderBody,
-            failOnStatusCode: false,
-          });
-          expect(orderRes.status()).toBe(201);
-          const order = OrderSchema.parse(await orderRes.json());
+          const order = await orders.create(
+            makeFakeOrder({
+              ...orderOverrides,
+              pickup_lat: 50.08,
+              pickup_lng: 14.42,
+            })
+          );
           return order.id;
         });
 
         await test.step("dispatch objednávky", async () => {
-          const dispatchRes = await request.post(
-            `/api/v1/dispatch/auto/${orderId}`,
-            {
-              headers: { Authorization: `Bearer ${authToken}` },
-              failOnStatusCode: false,
-            }
-          );
-          if (dispatchRes.status() !== 200) {
-            const errBody = await dispatchRes.text();
-            console.log(
-              `[DISPATCH DEBUG] status=${dispatchRes.status()} body=${errBody}`
-            );
-          }
-          expect(dispatchRes.status()).toBe(200);
-          const dispatchBody = await dispatchRes.json();
-          expect(dispatchBody.success).toBe(true);
+          const result = await dispatch.auto(orderId!);
+          expect(result.success).toBe(true);
         });
       } finally {
-        if (orderId) {
-          await request.post(`/api/v1/orders/${orderId}/cancel`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-            failOnStatusCode: false,
-          });
+        if (orderId !== null) {
+          await orders.cancel(orderId).catch(() => {});
         }
-        if (courierId) {
-          await request.patch(`/api/v1/couriers/${courierId}/status`, {
-            data: { status: "offline" },
-            failOnStatusCode: false,
-          });
-          await request.delete(`/api/v1/couriers/${courierId}`, {
-            failOnStatusCode: false,
-          });
+        if (courierId !== null) {
+          await couriers.setStatus(courierId, "offline").catch(() => {});
+          await couriers.tryDelete(courierId);
         }
-        if (orderId) {
-          await request.delete(`/api/v1/orders/${orderId}`, {
-            headers: { Authorization: `Bearer ${authToken}` },
-            failOnStatusCode: false,
-          });
+        if (orderId !== null) {
+          await adminOrders.tryDelete(orderId);
         }
       }
     });
@@ -144,13 +101,10 @@ test.describe("Dispatch — failing scénáře", () => {
       const order = OrderSchema.parse(await orderRes.json());
       orderId = order.id;
 
-      const dispatchRes = await request.post(
-        `/api/v1/dispatch/auto/${orderId}`,
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-          failOnStatusCode: false,
-        }
-      );
+      const dispatchRes = await request.post(`/api/v1/dispatch/auto/${orderId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+        failOnStatusCode: false,
+      });
       const dispatchBody = await dispatchRes.json();
       // API vrátí success: false nebo error status — obojí je správná odpověď
       const isFailure =

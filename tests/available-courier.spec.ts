@@ -1,10 +1,7 @@
 import { test, expect } from "../fixtures/api-fixtures";
 
 test.describe("availableCourier fixture", () => {
-  test("availableCourier je v /couriers/available", async ({
-    request,
-    availableCourier,
-  }) => {
+  test("availableCourier je v /couriers/available", async ({ request, availableCourier }) => {
     const response = await request.get("/api/v1/couriers/available");
     expect(response.status()).toBe(200);
 
@@ -18,12 +15,9 @@ test.describe("availableCourier fixture", () => {
     request,
     availableCourier,
   }) => {
-    const statusResponse = await request.patch(
-      `/api/v1/couriers/${availableCourier.id}/status`,
-      {
-        data: { status: "offline" },
-      }
-    );
+    const statusResponse = await request.patch(`/api/v1/couriers/${availableCourier.id}/status`, {
+      data: { status: "offline" },
+    });
 
     expect(statusResponse.status()).toBe(200);
 

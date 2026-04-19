@@ -1,9 +1,6 @@
 import { test, expect } from "../fixtures/api-fixtures";
 
-test("kurýr je k dispozici v testu, po testu zmizí", async ({
-  request,
-  testCourier,
-}) => {
+test("kurýr je k dispozici v testu, po testu zmizí", async ({ request, testCourier }) => {
   // Test dostane už hotového kurýra
   expect(testCourier.id).toBeDefined();
   expect(testCourier.status).toBe("offline");
@@ -15,9 +12,7 @@ test("kurýr je k dispozici v testu, po testu zmizí", async ({
   expect(detail.email).toContain("@example.com");
 });
 
-test("druhý test - dostane vlastního kurýra (nezávislého)", async ({
-  testCourier,
-}) => {
+test("druhý test - dostane vlastního kurýra (nezávislého)", async ({ testCourier }) => {
   // Tohle je jiný kurýr s jiným ID
   expect(testCourier.id).toBeDefined();
 });

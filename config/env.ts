@@ -3,18 +3,18 @@ import { resolve } from "node:path";
 import * as z from "zod";
 
 // 1. Načti .env, pak overrides podle TEST_ENV
-const testEnv = process.env.TEST_ENV ?? "local";
+const testEnv = process.env["TEST_ENV"] ?? "local";
 
-loadDotenv({ 
-  path: resolve(process.cwd(), ".env"), 
-  quiet: true,  // <-- tohle
+loadDotenv({
+  path: resolve(process.cwd(), ".env"),
+  quiet: true, // <-- tohle
 });
 
 if (testEnv !== "local") {
   loadDotenv({
     path: resolve(process.cwd(), `.env.${testEnv}`),
     override: true,
-    quiet: true,  // <-- a tohle
+    quiet: true, // <-- a tohle
   });
 }
 
