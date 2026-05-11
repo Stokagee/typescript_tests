@@ -12,6 +12,19 @@ import { defineConfig, devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  timeout: 20_000,              // 1) celý test (default 30s)
+  expect: {
+    timeout: 5_000,             // 2) expect()/assertions (default 5s)
+  },
+  use: {
+    actionTimeout: 5_000,      // 3) jednotlivé akce: click, fill... (default: žádný)
+    navigationTimeout: 7_000,
+        /* Base URL to use in actions like `await page.goto('')`. */
+    baseURL: 'http://localhost:20301/',
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+    testIdAttribute: 'data-testid'
+    },  //    page.goto, atd.
   testDir: './tests',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -24,15 +37,6 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:20301/',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    testIdAttribute: 'data-testid'
-  },
-
   /* Configure projects for major browsers */
   projects: [
     {
