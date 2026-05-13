@@ -8,3 +8,4 @@ node_modules/
 /playwright/.auth/
 test-results/
 .last-run.json
+screenshots/

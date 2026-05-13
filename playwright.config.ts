@@ -17,6 +17,7 @@ export default defineConfig({
     timeout: 5_000,             // 2) expect()/assertions (default 5s)
   },
   use: {
+    screenshot: "only-on-failure",     // Capture the screenshot
     actionTimeout: 5_000,      // 3) jednotlivé akce: click, fill... (default: žádný)
     navigationTimeout: 7_000,
         /* Base URL to use in actions like `await page.goto('')`. */
