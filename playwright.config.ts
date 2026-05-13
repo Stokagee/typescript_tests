@@ -18,6 +18,7 @@ export default defineConfig({
   },
   use: {
     screenshot: "only-on-failure",     // Capture the screenshot
+    video: "retain-on-failure",        // capture the video
     actionTimeout: 5_000,      // 3) jednotlivé akce: click, fill... (default: žádný)
     navigationTimeout: 7_000,
         /* Base URL to use in actions like `await page.goto('')`. */
