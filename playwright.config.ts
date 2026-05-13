@@ -25,7 +25,7 @@ export default defineConfig({
     baseURL: 'http://localhost:20301/',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     // viewport: { width:1920, height:1080 }
-    trace: 'on-first-retry',
+    trace: 'on',
     testIdAttribute: 'data-testid'
     },  //    page.goto, atd.
   testDir: './tests',
