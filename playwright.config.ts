@@ -17,13 +17,15 @@ export default defineConfig({
     timeout: 5_000,             // 2) expect()/assertions (default 5s)
   },
   use: {
+    screenshot: "only-on-failure",     // Capture the screenshot
+    video: "retain-on-failure",        // capture the video
     actionTimeout: 5_000,      // 3) jednotlivé akce: click, fill... (default: žádný)
     navigationTimeout: 7_000,
         /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: 'http://localhost:20301/',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     // viewport: { width:1920, height:1080 }
-    trace: 'on-first-retry',
+    trace: 'on',
     testIdAttribute: 'data-testid'
     },  //    page.goto, atd.
   testDir: './tests',
